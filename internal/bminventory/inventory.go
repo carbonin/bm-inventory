@@ -1204,8 +1204,9 @@ func (b *bareMetalInventory) RegisterHost(ctx context.Context, params installer.
 		return common.GenerateErrorResponder(common.NewApiError(http.StatusInternalServerError, err))
 	}
 
-	msg := "New host registered to cluster"
-	b.eventsHandler.AddEvent(ctx, params.NewHostParams.HostID.String(), models.EventSeverityInfo, msg, time.Now(), params.ClusterID.String())
+	b.eventsHandler.AddEvent(ctx, params.NewHostParams.HostID.String(), models.EventSeverityInfo,
+		fmt.Sprintf("Host %s: registered to cluster", params.NewHostParams.HostID.String()),
+		time.Now(), params.ClusterID.String())
 	return installer.NewRegisterHostCreated().WithPayload(&host)
 }
 
@@ -1221,8 +1222,8 @@ func (b *bareMetalInventory) DeregisterHost(ctx context.Context, params installe
 	}
 
 	// TODO: need to check that host can be deleted from the cluster
-	msg := "Host deregistered from cluster"
-	b.eventsHandler.AddEvent(ctx, params.HostID.String(), models.EventSeverityInfo, msg, time.Now(), params.ClusterID.String())
+	b.eventsHandler.AddEvent(ctx, params.HostID.String(), models.EventSeverityInfo,
+		fmt.Sprintf("Host %s: deregistered from cluster", params.HostID.String()), time.Now(), params.ClusterID.String())
 	return installer.NewDeregisterHostNoContent()
 }
 
@@ -1746,7 +1747,7 @@ func (b *bareMetalInventory) UpdateHostInstallProgress(ctx context.Context, para
 	}
 
 	log.Info(fmt.Sprintf("Host %s in cluster %s: %s", host.ID, host.ClusterID, event))
-	msg := fmt.Sprintf("Host %s: %s", b.hostApi.GetHostname(&host), event)
+	msg := fmt.Sprintf("Host %s: %s", common.GetHostnameForMsg(&host), event)
 
 	b.eventsHandler.AddEvent(ctx, host.ID.String(), models.EventSeverityInfo, msg, time.Now(), host.ClusterID.String())
 	return installer.NewUpdateHostInstallProgressOK()
@@ -2215,5 +2216,5 @@ func (b *bareMetalInventory) customizeHostStages(host *models.Host) {
 }
 
 func (b *bareMetalInventory) customizeHostname(host *models.Host) {
-	host.RequestedHostname = b.hostApi.GetHostname(host)
+	host.RequestedHostname = common.GetHostnameForMsg(host)
 }

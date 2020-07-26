@@ -17,3 +17,11 @@ func GetCurrentHostName(host *models.Host) (string, error) {
 	}
 	return inventory.Hostname, nil
 }
+
+func GetHostnameForMsg(host *models.Host) string {
+	hostName, err := GetCurrentHostName(host)
+	if err != nil || hostName == "" {
+		return host.ID.String()
+	}
+	return hostName
+}
